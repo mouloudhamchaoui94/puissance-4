@@ -4,6 +4,7 @@
 #define N 7
 #define P 2
 #define S 100
+#define G 4
 
 typedef struct _etat_jeu {
   char plateau[N][N];

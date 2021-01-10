@@ -58,13 +58,8 @@ void nouvelle_partie() {
       break;
     case 2:
       etat = creer_etat_jeu();
-      if (rand_int(0,1) == 0) {
-        etat->joueurs[0] = humain;
-        etat->joueurs[1] = machine;
-      } else {
-        etat->joueurs[0] = machine;
-        etat->joueurs[1] = humain;
-      }
+      etat->joueurs[0] = humain;
+      etat->joueurs[1] = machine;
       etat->tour = 0;
       jouer();
       break;
@@ -144,10 +139,19 @@ void trouner90Gauche() {
       }
     }
 
-    /*for (int i=0; i<N; i++) {
+    for (int i=0; i<N; i++) {
       etat->plateau[N-1-i][j] = save[i];
-    }*/
+    }
 
+  }
+
+  // Mettre à jour les niveau
+  for (int j=0; j<N; j++) {
+    int i=N-1;
+    while (i >= 0 && etat->plateau[i][j] != ' ') {
+      i--;
+    }
+    etat->niveau[j] = i+1;
   }
 
 }
@@ -184,10 +188,19 @@ void tourner90Droite() {
       }
     }
 
-    /*for (int i=0; i<N; i++) {
+    for (int i=0; i<N; i++) {
       etat->plateau[N-1-i][j] = save[i];
-    }*/
+    }
 
+  }
+
+  // Mettre à jour les niveau
+  for (int j=0; j<N; j++) {
+    int i=N-1;
+    while (i >= 0 && etat->plateau[i][j] != ' ') {
+      i--;
+    }
+    etat->niveau[j] = i+1;
   }
 }
 
@@ -224,7 +237,7 @@ void humain() {
       do {
         printf("Quelle colonne ? ");
         scanf("%d", &col);
-        if (col >= 7 || etat->niveau[col-1] <= 0) {
+        if (col >= 8 || etat->niveau[col-1] <= 0) {
           printf("Cette opération n'est pas autorisée\n");
         }
       } while (col >= 7 || etat->niveau[col-1] <= 0);
@@ -253,7 +266,30 @@ void humain() {
 }
 
 void machine() {
-  printf("Je suis une IA");
+  printf("\nTour de la machine");
+  int type = 1/*rand_int(1,4)*/;
+  int col;
+  switch (type) {
+    case 1:
+      col = 0;
+      for (int i=0; i<N; i++) {
+        if (etat->niveau[i] > 0) {
+          col = i;
+          break;
+        }
+      }
+      rajouterColonne(col);
+      break;
+    case 2:
+      trouner90Gauche();
+      break;
+    case 3:
+      tourner90Droite();
+      break;
+    case 4:
+      retournerGrille();
+      break;
+  }
 }
 
 void afficher_jeu() {
@@ -280,13 +316,69 @@ void afficher_jeu() {
 
 }
 
+int fin_du_jeu() {
+
+  // Tester s'il y a un gagant sur une ligne
+  for (int i=0; i<N; i++) {
+    int nbrePareil = 0;
+    for (int j=1; j<N; j++) {
+      if (etat->plateau[i][j] != ' ' && etat->plateau[i][j] == etat->plateau[i][j-1]) {
+        nbrePareil++;
+      } else {
+        nbrePareil = 0;
+      }
+      if (nbrePareil == G) {
+        return 1;
+      }
+    }
+  }
+
+  // Tester s'il y a un gagant sur une colonne
+  for (int i=0; i<N; i++) {
+    int nbrePareil = 0;
+    for (int j=1; j<N; j++) {
+      if (etat->plateau[j][i] != ' ' && etat->plateau[j][i] == etat->plateau[j-1][i]) {
+        nbrePareil++;
+      } else {
+        nbrePareil = 0;
+      }
+      if (nbrePareil == G) {
+        return 1;
+      }
+    }
+  }
+
+  // Tester si la grille n'est pas remplie
+  for (int i=0; i<N; i++) {
+    if (etat->niveau[i] > 0) {
+      return 0;
+    }
+  }
+
+  // La grille est remplie
+  return 2;
+}
+
 void jouer() {
   while(1) {
     afficher_jeu();
     printf("\n");
     etat->joueurs[etat->tour]();
-    etat->tour = 1-etat->tour;
     printf("\n");
+    int fin = fin_du_jeu();
+    if (fin == 1) {
+      afficher_jeu();
+      printf("\n");
+      printf("Le joueur %d a gagné\n", etat->tour+1);
+      break;
+    }
+    if (fin == 2) {
+      afficher_jeu();
+      printf("\n");
+      printf("Partie nulle\n");
+      break;
+    }
+    etat->tour = 1-etat->tour;
   }
 }
 
