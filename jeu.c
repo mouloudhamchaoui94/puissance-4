@@ -103,6 +103,39 @@ void quitter_partie() {
 }
 
 
+void compresser_plateau() {
+  char save[N];
+  int k;
+
+  // Compresser chaque ligne
+  for (int j=0; j<N; j++) {
+
+    for (int i=0; i<N; save[i]=' ', i++);
+    k=0;
+
+    for (int i=N-1; i>=0; i--) {
+      if (etat->plateau[i][j] != ' ') {
+        save[k] = etat->plateau[i][j];
+        k++;
+      }
+    }
+
+    for (int i=0; i<N; i++) {
+      etat->plateau[N-1-i][j] = save[i];
+    }
+
+  }
+
+  // Mettre à jour les niveau
+  for (int j=0; j<N; j++) {
+    int i=N-1;
+    while (i >= 0 && etat->plateau[i][j] != ' ') {
+      i--;
+    }
+    etat->niveau[j] = i+1;
+  }
+}
+
 void rajouterColonne(int col) {
   etat->niveau[col]--;
   etat->plateau[etat->niveau[col]][col] = (etat->tour == 0)? 'X':'O';
@@ -123,36 +156,7 @@ void trouner90Gauche() {
     }
   }
 
-  char save[N];
-  int k;
-
-  // Compresser chaque ligne
-  for (int j=0; j<N; j++) {
-
-    for (int i=0; i<N; save[i]=' ', i++);
-    k=0;
-
-    for (int i=N-1; i>=0; i--) {
-      if (etat->plateau[i][j] != ' ') {
-        save[k] = etat->plateau[i][j];
-        k++;
-      }
-    }
-
-    for (int i=0; i<N; i++) {
-      etat->plateau[N-1-i][j] = save[i];
-    }
-
-  }
-
-  // Mettre à jour les niveau
-  for (int j=0; j<N; j++) {
-    int i=N-1;
-    while (i >= 0 && etat->plateau[i][j] != ' ') {
-      i--;
-    }
-    etat->niveau[j] = i+1;
-  }
+  compresser_plateau();
 
 }
 
@@ -172,36 +176,7 @@ void tourner90Droite() {
     }
   }
 
-  char save[N];
-  int k;
-
-  // Compresser chaque ligne
-  for (int j=0; j<N; j++) {
-
-    for (int i=0; i<N; save[i]=' ', i++);
-    k=0;
-
-    for (int i=N-1; i>=0; i--) {
-      if (etat->plateau[i][j] != ' ') {
-        save[k] = etat->plateau[i][j];
-        k++;
-      }
-    }
-
-    for (int i=0; i<N; i++) {
-      etat->plateau[N-1-i][j] = save[i];
-    }
-
-  }
-
-  // Mettre à jour les niveau
-  for (int j=0; j<N; j++) {
-    int i=N-1;
-    while (i >= 0 && etat->plateau[i][j] != ' ') {
-      i--;
-    }
-    etat->niveau[j] = i+1;
-  }
+  compresser_plateau();
 }
 
 void retournerGrille() {
@@ -212,6 +187,8 @@ void retournerGrille() {
       etat->plateau[N-1-i][j] = tmp;
     }
   }
+
+  compresser_plateau();
 }
 
 void humain() {
@@ -240,7 +217,7 @@ void humain() {
         if (col >= 8 || etat->niveau[col-1] <= 0) {
           printf("Cette opération n'est pas autorisée\n");
         }
-      } while (col >= 7 || etat->niveau[col-1] <= 0);
+      } while (col >= 8 || etat->niveau[col-1] <= 0);
       rajouterColonne(col-1);
       break;
     case 2:
@@ -266,8 +243,8 @@ void humain() {
 }
 
 void machine() {
-  printf("\nTour de la machine");
-  int type = 1/*rand_int(1,4)*/;
+  printf("La machine vient de jouer\n");
+  int type = rand_int(1,4);
   int col;
   switch (type) {
     case 1:
@@ -320,12 +297,12 @@ int fin_du_jeu() {
 
   // Tester s'il y a un gagant sur une ligne
   for (int i=0; i<N; i++) {
-    int nbrePareil = 0;
+    int nbrePareil = 1;
     for (int j=1; j<N; j++) {
       if (etat->plateau[i][j] != ' ' && etat->plateau[i][j] == etat->plateau[i][j-1]) {
         nbrePareil++;
       } else {
-        nbrePareil = 0;
+        nbrePareil = 1;
       }
       if (nbrePareil == G) {
         return 1;
@@ -335,12 +312,12 @@ int fin_du_jeu() {
 
   // Tester s'il y a un gagant sur une colonne
   for (int i=0; i<N; i++) {
-    int nbrePareil = 0;
+    int nbrePareil = 1;
     for (int j=1; j<N; j++) {
       if (etat->plateau[j][i] != ' ' && etat->plateau[j][i] == etat->plateau[j-1][i]) {
         nbrePareil++;
       } else {
-        nbrePareil = 0;
+        nbrePareil = 1;
       }
       if (nbrePareil == G) {
         return 1;
